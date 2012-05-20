@@ -1,4 +1,4 @@
-'From Cuis 4.0 of 21 April 2012 [latest update: #1270] on 20 May 2012 at 5:41:37 pm'!
+'From Cuis 4.0 of 21 April 2012 [latest update: #1288] on 20 May 2012 at 6:19:35 pm'!
 'Description Please enter a description for this package '!
 !classDefinition: #EncodedCharSet category: #'Cuis-Multilingual-Encodings'!
 Object subclass: #EncodedCharSet
@@ -26,6 +26,18 @@ An abstract superclasss of the classes that represent encoded character sets.  I
 
 !Unicode commentStamp: 'yo 10/19/2004 20:44' prior: 0!
 This class holds the entry points for the utility functions around characters.!
+
+!Character class methodsFor: '*Cuis-Multilingual-Encodings' stamp: 'gsa 5/20/2012 18:16'!
+leadingChar: leadChar code: code
+
+	code >= 16r400000 ifTrue: [
+		self error: 'code is out of range'.
+	].
+	leadChar >= 256 ifTrue: [
+		self error: 'lead is out of range'.
+	].
+	code < 256 ifTrue: [ ^self value: code ].
+	^self value: (leadChar bitShift: 22) + code.! !
 
 !EncodedCharSet class methodsFor: 'character classification' stamp: 'yo 8/5/2003 16:55'!
 canBeGlobalVarInitial: char	| leadingChar |	leadingChar := char leadingChar.	leadingChar = 0 ifTrue: [^ self isUppercase: char].	^ self isLetter: char.! !
