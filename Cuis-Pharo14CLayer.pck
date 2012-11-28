@@ -1,4 +1,4 @@
-'From Cuis 4.0 of 21 April 2012 [latest update: #1308] on 23 November 2012 at 4:51:28 pm'!
+'From Cuis 4.0 of 21 April 2012 [latest update: #1308] on 28 November 2012 at 6:40:26 pm'!
 'Description Please enter a description for this package '!
 
 !Character methodsFor: '*Cuis-Pharo14CLayer' stamp: 'gsa 5/13/2012 10:42'!
@@ -16,24 +16,6 @@ codePoint: anInteger
 !ClassDescription methodsFor: '*Cuis-Pharo14CLayer' stamp: 'gsa 5/13/2012 10:26'!
 classSide
 	^self theMetaClass! !
-
-!Collection methodsFor: '*Cuis-Pharo14CLayer' stamp: 'gsa 11/23/2012 11:08'!
-contains: aBlock
-	"VW compatibility"
-	^self anySatisfy: aBlock! !
-
-!Dictionary methodsFor: '*Cuis-Pharo14CLayer' stamp: 'gsa 11/23/2012 16:15'!
-associationsSelect: aBlock 
-	"Evaluate aBlock with each of my associations as the argument. Collect
-	into a new dictionary, only those associations for which aBlock evaluates
-	to true."
-
-	| newCollection |
-	newCollection := self species new.
-	self associationsDo: 
-		[:each | 
-		(aBlock value: each) ifTrue: [newCollection add: each]].
-	^newCollection! !
 
 !Matrix methodsFor: '*Cuis-Pharo14CLayer' stamp: 'gsa 11/23/2012 12:04'!
 at: row at: column
@@ -68,7 +50,3 @@ rows: rows columns: columns
 !Matrix class methodsFor: '*Cuis-Pharo14CLayer' stamp: 'gsa 11/23/2012 11:20'!
 rows: rows columns: columns contents: contents
 	^self new rows: rows columns: columns contents: contents! !
-
-!Symbol methodsFor: '*Cuis-Pharo14CLayer' stamp: 'gsa 11/23/2012 10:51'!
-value: anObject 
-	^anObject perform: self.! !
