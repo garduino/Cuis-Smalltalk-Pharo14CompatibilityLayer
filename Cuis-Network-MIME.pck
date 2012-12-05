@@ -1,4 +1,4 @@
-'From Cuis 4.0 of 21 April 2012 [latest update: #1270] on 12 May 2012 at 8:35:26 pm'!
+'From Cuis 4.0 of 21 April 2012 [latest update: #1308] on 5 December 2012 at 10:08:19 am'!
 'Description Please enter a description for this package '!
 !classDefinition: #MIMEDocument category: #'Cuis-Network-MIME'!
 Object subclass: #MIMEDocument
@@ -74,16 +74,18 @@ RFC2047MimeConverter class
 !Base64MimeConverter commentStamp: '<historical>' prior: 0!
 This class encodes and decodes data in Base64 format.  This is MIME encoding.  We translate a whole stream at once, taking a Stream as input and giving one as output.  Returns a whole stream for the caller to use.           0 A            17 R            34 i            51 z           1 B            18 S            35 j            52 0           2 C            19 T            36 k            53 1           3 D            20 U            37 l            54 2           4 E            21 V            38 m            55 3           5 F            22 W            39 n            56 4           6 G            23 X            40 o            57 5           7 H            24 Y            41 p            58 6           8 I            25 Z            42 q            59 7           9 J            26 a            43 r            60 8          10 K            27 b            44 s            61 9          11 L            28 c            45 t            62 +          12 M            29 d            46 u            63 /          13 N            30 e            47 v          14 O            31 f            48 w         (pad) =          15 P            32 g            49 x          16 Q            33 h            50 yOutbound: bytes are broken into 6 bit chunks, and the 0-63 value is converted to a character.  3 data bytes go into 4 characters.Inbound: Characters are translated in to 0-63 values and shifted into 8 bit bytes.(See: N. Borenstein, Bellcore, N. Freed, Innosoft, Network Working Group, Request for Comments: RFC 1521, September 1993, MIME (Multipurpose Internet Mail Extensions) Part One: Mechanisms for Specifying and Describing the Format of Internet Message Bodies. Sec 6.2)By Ted Kaehler, based on Tim Olson's Base64Filter.!
 
-!MIMEDocument commentStamp: '<historical>' prior: 0!
-a MIME object, along with its type and the URL it was found at (if any)!
+!MIMEDocument commentStamp: 'gsa 12/5/2012 08:44' prior: 0!
+a MIME object, along with its type and the URL it was found at (if any)
+
+See comment in method #parts - GSA 05/12/2012!
 
 !MIMELocalFileDocument commentStamp: '<historical>' prior: 0!
 For local files, we do not read the entire contents unless we absolutely have to.!
 
-!MIMEType commentStamp: 'LaurentLaffont 6/8/2011 22:18' prior: 0!
+!MIMEType commentStamp: '<historical>' prior: 0!
 I guess and represent the content type of a file. For a description of what is MIME, seehttp://en.wikipedia.org/wiki/Internet_media_typehttp://en.wikipedia.org/wiki/MIMEExamples:MIMEType forFileNameReturnMimeTypesOrDefault: 'index.html'.MIMEType fromMIMEString: 'application/zip'.!
 
-!MimeConverter commentStamp: 'LaurentLaffont 6/8/2011 22:18' prior: 0!
+!MimeConverter commentStamp: '<historical>' prior: 0!
 I'm the base class for converting some data from a MIME type to another. Subclasses should implement #mimeDecode and #mimeEncode.!
 
 !QuotedPrintableMimeConverter commentStamp: '<historical>' prior: 0!
@@ -188,8 +190,26 @@ mainType	^self mimeType main! !
 !MIMEDocument methodsFor: 'accessing' stamp: 'mir 3/4/2002 17:19'!
 mimeType	^type! !
 
-!MIMEDocument methodsFor: 'accessing' stamp: 'damiencassou 5/30/2008 15:52'!
-parts	"Return the parts of this message.  There is a far more reliable implementation of parts in MailMessage, but for now we are continuing to use this implementation"	| parseStream currLine separator msgStream messages |	self isMultipart ifFalse: 		[ ^ #() ].	parseStream := self content readStream.	currLine := ''.	[ '--*' match: currLine ] whileFalse: [ currLine := parseStream nextLine ].	separator := currLine copy.	msgStream := LimitingLineStreamWrapper 		on: parseStream		delimiter: separator.	messages := OrderedCollection new.	[ parseStream atEnd ] whileFalse: 		[ messages add: msgStream upToEnd.		msgStream skipThisLine ].	^ messages collect: [ :e | MailMessage from: e ]! !
+!MIMEDocument methodsFor: 'accessing' stamp: 'gsa 12/5/2012 08:43'!
+parts
+	"Return the parts of this message.  There is a far more reliable implementation of parts in MailMessage, but for now we are continuing to use this implementation"
+	| parseStream currLine separator msgStream messages |
+" Commented by gsa because we don't have LimitingLineStreamWrapper nor MailMessage in Cuis (yet)"
+"
+	self isMultipart ifFalse: 
+		[ ^ #() ].
+	parseStream := self content readStream.
+	currLine := ''.
+	[ '--*' match: currLine ] whileFalse: [ currLine := parseStream nextLine ].
+	separator := currLine copy.
+	msgStream := LimitingLineStreamWrapper 
+		on: parseStream
+		delimiter: separator.
+	messages := OrderedCollection new.
+	[ parseStream atEnd ] whileFalse: 
+		[ messages add: msgStream upToEnd.
+		msgStream skipThisLine ].
+	^ messages collect: [ :e | MailMessage from: e ]"! !
 
 !MIMEDocument methodsFor: 'printing' stamp: 'mir 3/26/2005 17:48'!
 printOn: aStream	aStream nextPutAll: self class name;		nextPutAll: ' (';		nextPutAll: self mimeType asString;		nextPutAll: ', '.	contents		ifNotNil: [aStream			nextPutAll: self contents size printString;			nextPutAll: ' bytes)']		ifNil: [aStream nextPutAll: 'unknown size)'].! !
