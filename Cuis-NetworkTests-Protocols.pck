@@ -1,4 +1,4 @@
-'From Cuis 4.0 of 21 April 2012 [latest update: #1308] on 7 December 2012 at 10:16:30 am'!
+'From Cuis 4.0 of 21 April 2012 [latest update: #1308] on 7 December 2012 at 5:05:51 pm'!
 'Description Please enter a description for this package '!
 !classDefinition: #HTTPSocketTest category: #'Cuis-NetworkTests-Protocols'!
 TestCase subclass: #HTTPSocketTest
@@ -58,8 +58,8 @@ initialize	super initialize.	self resetInStream.	self resetOutStream.! !
 !MockSocketStream methodsFor: 'stream in' stamp: 'fbs 3/22/2004 13:10'!
 nextLine	^self nextLineCrLf! !
 
-!MockSocketStream methodsFor: 'stream in' stamp: 'fbs 3/22/2004 13:09'!
-nextLineCrLf	^(self upToAll: String crlf).! !
+!MockSocketStream methodsFor: 'stream in' stamp: 'gsa 12/7/2012 17:02'!
+nextLineCrLf	^(self upToAll: String crlfString).! !
 
 !MockSocketStream methodsFor: 'accessing' stamp: 'fbs 3/22/2004 13:08'!
 outStream	^outStream! !
@@ -70,8 +70,8 @@ resetInStream	inStream := String new writeStream.! !
 !MockSocketStream methodsFor: 'stream out' stamp: 'PeterHugossonMiller 9/3/2009 10:05'!
 resetOutStream	outStream := String new writeStream.! !
 
-!MockSocketStream methodsFor: 'stream out' stamp: 'fbs 3/22/2004 13:07'!
-sendCommand: aString	self outStream		nextPutAll: aString;		nextPutAll: String crlf.! !
+!MockSocketStream methodsFor: 'stream out' stamp: 'gsa 12/7/2012 17:01'!
+sendCommand: aString	self outStream		nextPutAll: aString;		nextPutAll: String crlfString.! !
 
 !MockSocketStream methodsFor: 'stream in' stamp: 'fbs 3/22/2004 13:09'!
 upToAll: delims	^self inStream upToAll: delims.! !
@@ -82,5 +82,15 @@ on: socket	^self basicNew initialize! !
 !SMTPClientTest methodsFor: 'running' stamp: 'fbs 3/22/2004 13:11'!
 setUp	socket := MockSocketStream on: ''.	smtp := SMTPClient new.	smtp stream: socket.! !
 
-!SMTPClientTest methodsFor: 'testing' stamp: 'fbs 3/23/2004 17:15'!
-testMailFrom	smtp mailFrom: 'frank@angband.za.org'.	self assert: socket outStream contents = ('MAIL FROM: <frank@angband.za.org>', String crlf).		socket resetOutStream.	smtp mailFrom: '<frank@angband.za.org>'.	self assert: socket outStream contents = ('MAIL FROM: <frank@angband.za.org>', String crlf).		socket resetOutStream.	smtp mailFrom: 'Frank <frank@angband.za.org>'.	self assert: socket outStream contents = ('MAIL FROM: <frank@angband.za.org>', String crlf).! !
+!SMTPClientTest methodsFor: 'testing' stamp: 'gsa 12/7/2012 17:03'!
+testMailFrom
+	smtp mailFrom: 'frank@angband.za.org'.
+	self assert: socket outStream contents = ('MAIL FROM: <frank@angband.za.org>', String crlfString).
+	
+	socket resetOutStream.
+	smtp mailFrom: '<frank@angband.za.org>'.
+	self assert: socket outStream contents = ('MAIL FROM: <frank@angband.za.org>', String crlfString).
+	
+	socket resetOutStream.
+	smtp mailFrom: 'Frank <frank@angband.za.org>'.
+	self assert: socket outStream contents = ('MAIL FROM: <frank@angband.za.org>', String crlfString).! !
