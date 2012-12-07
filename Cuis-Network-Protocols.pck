@@ -1,4 +1,4 @@
-'From Cuis 4.0 of 21 April 2012 [latest update: #1308] on 7 December 2012 at 9:58:38 am'!
+'From Cuis 4.0 of 21 April 2012 [latest update: #1308] on 7 December 2012 at 5:51:05 pm'!
 'Description Please enter a description for this package '!
 !classDefinition: #FTPConnectionException category: #'Cuis-Network-Protocols'!
 Error subclass: #FTPConnectionException
@@ -134,8 +134,40 @@ TelnetProtocolError class
 !FTPClient commentStamp: 'mir 5/12/2003 17:55' prior: 0!
 A minimal FTP client program.  Could store all state in inst vars, and use an instance to represent the full state of a connection in progress.  But simpler to do all that in one method and have it be a complete transaction.Always operates in passive mode (PASV).  All connections are initiated from client in order to get through firewalls.See ServerDirectory openFTP, ServerDirectory getFileNamed:, ServerDirectory putFile:named: for examples of use.See TCP/IP, second edition, by Dr. Sidnie Feit, McGraw-Hill, 1997, Chapter 14, p311.!
 
-!HTTPClient commentStamp: '<historical>' prior: 0!
-I'm a facade for doing simple HTTP GET/POST operations like downloading / uploading some content.For example, I get HTML content for http://www.pharo-project.org web page like this:      HTTPClient httpGet: 'http://www.pharo-project.org'.      HTTPClient httpGetDocument: 'http://www.pharo-project.org'.When successful, a Stream respectively a MIMEDocument is returned, in case of error, a String is returned.Or, I can make a application/x-www-form-urlencoded post request to http://intranet.acme.com/login and send form data to the server like this:      (args := Dictionary new)		at: 'username' put: #('john@acme.com');		at: 'password' put: #('secretpassword').	result := HTTPClient httpPostDocument: 'http://intranet.acme.com/login' args: args.Alternatively, I can do a multipart/formdata post request to http://intranet.acme.com/files and send a file like this:      (args := Dictionary new)		at: 'file' put: (Array with: (MIMEDocument contents: 'This is a test' mimeType: 'text/plain' uri: 'file:///test.txt').	result := HTTPClient httpPostDocument: 'http://intranet.acme.com/files' args: args.	Pay attention, my code is not really good.<trollmode>I'm a good example of how not to write code. Turn around, walk away,fast. I'm fully of bugs.Somebody at some point thought that HTTP is a simple "hacker withtelnet"-protocol. It's not.</trollmode>[COTDC] 3 - Laurent Laffont, Francisco Ortiz Peñaloza, Sven Van Caekenberghe, Philippe Marschall.!
+!HTTPClient commentStamp: 'gsa 12/7/2012 17:30' prior: 0!
+I'm a facade for doing simple HTTP GET/POST operations like downloading / uploading some content.
+
+For example, I get HTML content for http://www.pharo-project.org web page like this:
+
+      HTTPClient httpGet: 'http://www.pharo-project.org'.
+      HTTPClient httpGetDocument: 'http://www.pharo-project.org'.
+
+When successful, a Stream respectively a MIMEDocument is returned, in case of error, a String is returned.
+
+Or, I can make a application/x-www-form-urlencoded post request to http://intranet.acme.com/login and send form data to the server like this:
+
+      (args := Dictionary new)
+		at: 'username' put: #('john@acme.com');
+		at: 'password' put: #('secretpassword').
+	result := HTTPClient httpPostDocument: 'http://intranet.acme.com/login' args: args.
+
+Alternatively, I can do a multipart/formdata post request to http://intranet.acme.com/files and send a file like this:
+
+      (args := Dictionary new)
+		at: 'file' put: (Array with: (MIMEDocument contents: 'This is a test' mimeType: 'text/plain' uri: 'file:///test.txt').
+	result := HTTPClient httpPostDocument: 'http://intranet.acme.com/files' args: args.
+	
+Pay attention, my code is not really good.
+
+<trollmode>
+I'm a good example of how not to write code. Turn around, walk away,
+fast. I'm fully of bugs.
+
+Somebody at some point thought that HTTP is a simple "hacker with
+telnet"-protocol. It's not.
+</trollmode>
+
+[COTDC] 3 - Laurent Laffont, Francisco Ortiz Peñaloza, Sven Van Caekenberghe, Philippe Marschall.!
 
 !HTTPProgress commentStamp: 'StephaneDucasse 3/28/2010 21:27' prior: 0!
 A notification to show progress when using HTTP.I include- total: The total size of the download (if known)- amount: The completed amount of the download (if known)!
