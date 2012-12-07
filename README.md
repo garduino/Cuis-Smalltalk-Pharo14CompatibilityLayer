@@ -14,3 +14,6 @@ The source of the ports is Pharo 1.4 Summer.
 Notes about specific packages:
 
 Cuis-Network-MIME: Read MIMEDocument class comment.
+
+
+Cuis-NetworkTest-Url: In the Pharo package most of classes inherit from ClassTestCase, I modified here to inherit from TestCase.

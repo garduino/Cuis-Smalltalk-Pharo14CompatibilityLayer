@@ -1,4 +1,4 @@
-'From Cuis 4.0 of 21 April 2012 [latest update: #1270] on 12 May 2012 at 8:31:14 pm'!
+'From Cuis 4.0 of 21 April 2012 [latest update: #1308] on 7 December 2012 at 6:09:35 pm'!
 'Description Please enter a description for this package '!
 !classDefinition: #Authorizer category: #'Cuis-Network-Url'!
 Object subclass: #Authorizer
@@ -397,6 +397,17 @@ composeText	"Answer the template for a new message."	^ String streamContents:
 
 !MailtoUrl class methodsFor: 'constants' stamp: 'SeanDeNigris 1/29/2011 19:33'!
 schemeName	^ 'mailto'! !
+
+!String methodsFor: '*Cuis-Network-Url' stamp: 'gsa 12/7/2012 18:08'!
+asUrl
+	"convert to a Url"
+	"'http://www.cc.gatech.edu/' asUrl"
+	"msw://chaos.resnet.gatech.edu:9000/' asUrl"
+	^Url absoluteFromText: self! !
+
+!String methodsFor: '*Cuis-Network-Url' stamp: 'gsa 12/7/2012 18:09'!
+asUrlRelativeTo: aUrl
+	^aUrl newFromRelativeText: self! !
 
 !Url methodsFor: 'downloading' stamp: 'ls 8/4/1998 20:41'!
 activate	"spawn an external handler for this URL"	! !
