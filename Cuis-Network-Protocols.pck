@@ -1,4 +1,4 @@
-'From Cuis 4.0 of 21 April 2012 [latest update: #1308] on 7 December 2012 at 5:51:05 pm'!
+'From Cuis 4.1 of 12 December 2012 [latest update: #1517] on 17 December 2012 at 7:07:59 pm'!
 'Description Please enter a description for this package '!
 !classDefinition: #FTPConnectionException category: #'Cuis-Network-Protocols'!
 Error subclass: #FTPConnectionException
@@ -131,10 +131,10 @@ TelnetProtocolError class
 	instanceVariableNames: ''!
 
 
-!FTPClient commentStamp: 'mir 5/12/2003 17:55' prior: 0!
+!FTPClient commentStamp: '<historical>' prior: 0!
 A minimal FTP client program.  Could store all state in inst vars, and use an instance to represent the full state of a connection in progress.  But simpler to do all that in one method and have it be a complete transaction.Always operates in passive mode (PASV).  All connections are initiated from client in order to get through firewalls.See ServerDirectory openFTP, ServerDirectory getFileNamed:, ServerDirectory putFile:named: for examples of use.See TCP/IP, second edition, by Dr. Sidnie Feit, McGraw-Hill, 1997, Chapter 14, p311.!
 
-!HTTPClient commentStamp: 'gsa 12/7/2012 17:30' prior: 0!
+!HTTPClient commentStamp: '<historical>' prior: 0!
 I'm a facade for doing simple HTTP GET/POST operations like downloading / uploading some content.
 
 For example, I get HTML content for http://www.pharo-project.org web page like this:
@@ -169,34 +169,34 @@ telnet"-protocol. It's not.
 
 [COTDC] 3 - Laurent Laffont, Francisco Ortiz Peñaloza, Sven Van Caekenberghe, Philippe Marschall.!
 
-!HTTPProgress commentStamp: 'StephaneDucasse 3/28/2010 21:27' prior: 0!
+!HTTPProgress commentStamp: '<historical>' prior: 0!
 A notification to show progress when using HTTP.I include- total: The total size of the download (if known)- amount: The completed amount of the download (if known)!
 
 !HTTPSocket commentStamp: '<historical>' prior: 0!
 HTTPSockets support HTTP requests, either directly or via an HTTP proxy server. An HTTPSocket saves the parse of the last ASCII header it saw, to avoid having to parse it repeatedly.The real action is in httpGet:accept:.  See the examples in the class, especially httpFileInNewChangeSet: and httpShowGif:.!
 
-!LoginFailedException commentStamp: 'mir 5/12/2003 17:57' prior: 0!
+!LoginFailedException commentStamp: '<historical>' prior: 0!
 Exception for signaling login failures of protocol clients.!
 
-!POP3Client commentStamp: 'mir 5/12/2003 17:57' prior: 0!
+!POP3Client commentStamp: '<historical>' prior: 0!
 This class implements POP3 (Post Office Protocol 3) as specified in RFC 1939.  (see http://www.ietf.org/rfc.html)You can use it to download email from the mail server to your personal mail program.To see an example of it's use, see POPSocket class>>example.!
 
-!POP3LoginError commentStamp: 'mir 5/12/2003 17:58' prior: 0!
+!POP3LoginError commentStamp: '<historical>' prior: 0!
 Exception for signaling POP3 login failures.!
 
-!ProtocolClient commentStamp: 'gk 12/13/2005 00:34' prior: 0!
+!ProtocolClient commentStamp: '<historical>' prior: 0!
 ProtocolClient is the abstract super class for a variety of network protocol clients.It uses a stream rather than the direct network access so it could also work for streams on serial connections etc.Structure:	stream				stream representing the connection to and from the server	connectInfo			information required for opening a connection	lastResponse			remembers the last response from the server.	progressObservers 	any object understanding #show: can be registered as a progress observer (login, transfer, etc)!
 
-!ProtocolClientError commentStamp: 'mir 5/12/2003 18:05' prior: 0!
+!ProtocolClientError commentStamp: '<historical>' prior: 0!
 Abstract super class for protocol clients	protocolInstance		reference to the protocol client throughing the exception. Exception handlers can access the client in order close, respond or whatever may be appropriate!
 
-!SMTPClient commentStamp: 'mir 2/21/2002 16:57' prior: 0!
+!SMTPClient commentStamp: '<historical>' prior: 0!
 This class implements the SMTP (mail sending) protocol specified in RFC 821.HELO <SP> <domain> <CRLF>MAIL <SP> FROM:<reverse-path> <CRLF>RCPT <SP> TO:<forward-path> <CRLF>DATA <CRLF>RSET <CRLF>SEND <SP> FROM:<reverse-path> <CRLF>SOML <SP> FROM:<reverse-path> <CRLF>SAML <SP> FROM:<reverse-path> <CRLF>VRFY <SP> <string> <CRLF>EXPN <SP> <string> <CRLF>HELP [<SP> <string>] <CRLF>NOOP <CRLF>QUIT <CRLF>TURN <CRLF>!
 
-!TelnetProtocolClient commentStamp: 'mir 5/12/2003 18:06' prior: 0!
+!TelnetProtocolClient commentStamp: '<historical>' prior: 0!
 Abstract super class for protocol clients based on the generic telnet protocol "<response code> <response>"Structure:	responseCode	the numerical (integer) value of the last response code!
 
-!TelnetProtocolError commentStamp: 'mir 5/12/2003 18:07' prior: 0!
+!TelnetProtocolError commentStamp: '<historical>' prior: 0!
 Abstract super class for exceptions signalled by clients based on the telnet protocol.!
 
 !FTPClient methodsFor: 'protocol' stamp: 'mir 2/13/2002 18:05'!
@@ -400,8 +400,8 @@ blabEmail: aRequest	"Of the form 'From: me@isp.com <crlf>'"	HTTPBlabEmail := a
 !HTTPSocket class methodsFor: 'magic numbers' stamp: 'ls 9/17/1998 07:17'!
 defaultPort	"default port to connect on"	^80! !
 
-!HTTPSocket class methodsFor: 'digest' stamp: 'damiencassou 2/17/2009 09:53'!
-digestFor: serverText method: method url: url user: user password: password	"RFC2069"	| sock |	sock := HTTPSocket new. "header decoder is on instance side"	sock header: (serverText readStream upToAll: String crlf, String crlf).	^self digestFrom: sock method: method url: url user: user password: password! !
+!HTTPSocket class methodsFor: 'digest' stamp: 'gsa 12/17/2012 19:07'!
+digestFor: serverText method: method url: url user: user password: password	"RFC2069"	| sock |	sock := HTTPSocket new. "header decoder is on instance side"	sock header: (serverText readStream upToAll: String crlfString, String crlfString).	^self digestFrom: sock method: method url: url user: user password: password! !
 
 !HTTPSocket class methodsFor: 'digest' stamp: 'damiencassou 2/17/2009 09:54'!
 digestFrom: sock method: method url: url user: user password: password	"RFC2069"	| auth fields realm nonce uri a1 a2 response |	sock responseCode = '401' ifFalse: [^nil].	auth := sock getHeader: 'www-authenticate'.	(auth asLowercase beginsWith: 'digest') ifFalse: [^nil].	fields := (((auth allButFirst: 6) findTokens: ', 	') collect: [:ea |		(ea copyUpTo: $=) asLowercase -> (ea copyAfter: $=) withoutQuoting]) as: Dictionary.	realm := fields at: 'realm'.	nonce := fields at: 'nonce'.	uri := url readStream upToAll: '://'; skipTo: $/; skip: -1; upTo: $#.	a1 := self md5Hash: user, ':', realm, ':', password.	a2 := self md5Hash: method, ':', uri.	a1 ifNil: [^nil "no MD5 support"].	response := self md5Hash: a1, ':', nonce, ':', a2.	^String streamContents: [:digest |		digest			nextPutAll: 'username="', user, '"';			nextPutAll: ', realm="', realm, '"';			nextPutAll: ', nonce="', nonce, '"';			nextPutAll: ', uri="', uri, '"';			nextPutAll: ', response="', response, '"'.		fields at: 'opaque' ifPresent: [:opaque |			digest nextPutAll: ', opaque="', opaque, '"'].	]! !
@@ -433,8 +433,8 @@ initHTTPSocket: httpUrl ifError: aBlock	"Retrieve the server and port informati
 !HTTPSocket class methodsFor: 'utilities' stamp: 'nice 4/29/2009 21:31'!
 initHTTPSocket: httpUrl timeoutSecs: timeout ifError: aBlock	"Retrieve the server and port information from the URL, match it to the proxy settings and open a http socket for the request."	| serverName port serverAddr s |	Socket initializeNetwork.	serverName := httpUrl authority.	port := httpUrl port ifNil: [self defaultPort].	(self shouldUseProxy: serverName) ifTrue: [ 		serverName := self httpProxyServer.		port := self httpProxyPort].  	"make the request"		serverAddr := NetNameResolver addressForName: serverName timeout: 20.	serverAddr ifNil: [		aBlock value: 'Error: Could not resolve the server named: ', serverName].	s := HTTPSocket new.	s connectTo: serverAddr port: port.	(s waitForConnectionFor: timeout ifTimedOut: [false]) ifFalse: [		Socket deadServer: httpUrl authority.		s destroy.		^aBlock value: 'Error: Server ',httpUrl authority,' is not responding'].	^s! !
 
-!HTTPSocket class methodsFor: 'initialization' stamp: 'MarcusDenker 3/22/2011 22:15'!
-initialize	"HTTPSocket initialize"	ParamDelimiters := ' ', String crlf.	HTTPProxyPort := 80.	self httpProxyServer: nil.	HTTPBlabEmail := ''.  "	'From: somebody@no.where', CrLf	"	HTTPProxyCredentials := ''.! !
+!HTTPSocket class methodsFor: 'initialization' stamp: 'gsa 12/17/2012 19:04'!
+initialize	"HTTPSocket initialize"	ParamDelimiters := ' ', String crlfString.	HTTPProxyPort := 80.	self httpProxyServer: nil.	HTTPBlabEmail := ''.  "	'From: somebody@no.where', CrLf	"	HTTPProxyCredentials := ''.! !
 
 !HTTPSocket class methodsFor: 'utilities' stamp: 'StephaneDucasse 3/27/2010 22:51'!
 ip: byteArrayIP port: portNum urlPath: urlPathString 	"HTTPSocket  ip: #[127 0 0 1] port: 8080 urlPath: '/beam'"		^String streamContents: [:stream | 		byteArrayIP			do: [:each | each printOn: stream]			separatedBy: [stream nextPut: $.].		stream nextPut: $:.		portNum printOn: stream.		stream nextPutAll: urlPathString]! !
@@ -445,8 +445,8 @@ md5Hash: aString	"Answer hash of aString as lowercase 32 digit hex String.	The
 !HTTPSocket class methodsFor: 'proxy settings' stamp: 'VeronicaUquillas 6/11/2010 14:46'!
 proxyTestingComment	"Test Kevin's SmartCache on this machine"	"	HTTPSocket useProxyServerNamed: '127.0.0.1' port: 8080.		HTTPSocket httpShowPage: 'http://www.disneyblast.com/default.html'.		HTTPSocket stopUsingProxyServer.	"	"Test getting to outside world from DOL"	"	HTTPSocket useProxyServerNamed: 'web-proxy.online.disney.com' port: 8080.		HTTPSocket httpShowPage: 'http://www.apple.com/default.html'.		HTTPSocket stopUsingProxyServer.	"	"Test Windows Machine in our cubicle at DOL"	"	HTTPSocket useProxyServerNamed: '206.18.67.150' port: 8080.		HTTPSocket httpShowPage: 'http://....'.		HTTPSocket stopUsingProxyServer.	"	"	HTTPSocket httpShowPage: 'kids.online.disney.com/'	"	"	HTTPSocket httpShowGif: 'kids.online.disney.com/~kevin/images/dlogo.gif'	"! !
 
-!HTTPSocket class methodsFor: 'proxy settings' stamp: 'AlainPlantec 1/29/2010 22:18'!
-proxyUser: userName password: password  "Store  HTTP 1.0 basic authentication credentials  Note: this is an ugly hack that stores your password   in your image.  It's just enought to get you going  if you use a firewall that requires authentication"  | stream encodedStream |  stream := (userName ,':' , password) readStream.  encodedStream := Base64MimeConverter mimeEncode: stream.  HTTPProxyCredentials := 'Proxy-Authorization: Basic ' , (encodedStream contents) , String crlf! !
+!HTTPSocket class methodsFor: 'proxy settings' stamp: 'gsa 12/17/2012 19:06'!
+proxyUser: userName password: password  "Store  HTTP 1.0 basic authentication credentials  Note: this is an ugly hack that stores your password   in your image.  It's just enought to get you going  if you use a firewall that requires authentication"  | stream encodedStream |  stream := (userName ,':' , password) readStream.  encodedStream := Base64MimeConverter mimeEncode: stream.  HTTPProxyCredentials := 'Proxy-Authorization: Basic ' , (encodedStream contents) , String crlfString! !
 
 !HTTPSocket class methodsFor: 'proxy settings' stamp: 'mir 7/30/1999 15:03'!
 removeProxyException: domainName	"Remove a (partial, wildcard) domain name from the list of proxy exceptions"	self httpProxyExceptions remove: domainName ifAbsent: []! !
