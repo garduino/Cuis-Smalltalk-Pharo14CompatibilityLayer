@@ -1,4 +1,4 @@
-'From Cuis 4.0 of 21 April 2012 [latest update: #1308] on 5 December 2012 at 10:08:19 am'!
+'From Cuis 4.1 of 12 December 2012 [latest update: #1528] on 2 January 2013 at 8:11:21 am'!
 'Description Please enter a description for this package '!
 !classDefinition: #MIMEDocument category: #'Cuis-Network-MIME'!
 Object subclass: #MIMEDocument
@@ -135,6 +135,24 @@ mimeEncode: aStream	"Return a ReadWriteStream of characters.  The data of aStre
 
 !Base64MimeConverter class methodsFor: 'as yet unclassified' stamp: 'dik 9/22/2010 18:08'!
 mimeEncode: aStream multiLine: aBool	"Return a ReadWriteStream of characters.  The data of aStream is encoded as 65 innocuous characters.  (See class comment). 3 bytes in aStream goes to 4 bytes in output."	| me |	me := self new dataStream: aStream.	me multiLine: aBool.	me mimeStream: (ReadWriteStream on: (String new: aStream size + 20 * 4 // 3)).	me mimeEncode.	me mimeStream position: 0.	^ me mimeStream! !
+
+!Base64MimeConverter class methodsFor: 'as yet unclassified' stamp: 'ar 3/9/2010 22:16'!
+mimeEncode: aStream multiLine: aBool atStart: resetInput
+	"Return a ReadWriteStream of characters.  The data of aStream is encoded as 65 innocuous characters.  (See class comment). 3 bytes in aStream goes to 4 bytes in output."
+
+	| me |
+	resetInput ifTrue:[aStream position: 0].
+	me := self new dataStream: aStream.
+	me multiLine: aBool.
+	me mimeStream: (ReadWriteStream on: (String new: aStream size + 20 * 4 // 3)).
+	me mimeEncode.
+	me mimeStream position: 0.
+	^ me mimeStream! !
+
+!Base64MimeConverter class methodsFor: 'as yet unclassified' stamp: 'ar 3/9/2010 22:17'!
+mimeEncodeContinue: aStream
+	"Return a ReadWriteStream of characters.  The data of aStream is encoded as 65 innocuous characters.  (See class comment). 3 bytes in aStream goes to 4 bytes in output."
+	^self mimeEncode: aStream multiLine: true atStart: false! !
 
 !MIMEDocument methodsFor: 'compatibility' stamp: 'mir 3/22/2005 22:55'!
 content	^self contents! !

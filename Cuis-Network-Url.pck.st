@@ -1,4 +1,4 @@
-'From Cuis 4.0 of 21 April 2012 [latest update: #1308] on 7 December 2012 at 6:09:35 pm'!
+'From Cuis 4.1 of 12 December 2012 [latest update: #1528] on 2 January 2013 at 8:24:03 am'!
 'Description Please enter a description for this package '!
 !classDefinition: #Authorizer category: #'Cuis-Network-Url'!
 Object subclass: #Authorizer

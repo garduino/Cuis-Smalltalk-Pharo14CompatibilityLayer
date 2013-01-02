@@ -1,4 +1,4 @@
-'From Cuis 4.1 of 12 December 2012 [latest update: #1517] on 17 December 2012 at 7:07:59 pm'!
+'From Cuis 4.1 of 12 December 2012 [latest update: #1528] on 2 January 2013 at 8:14:46 am'!
 'Description Please enter a description for this package '!
 !classDefinition: #FTPConnectionException category: #'Cuis-Network-Protocols'!
 Error subclass: #FTPConnectionException

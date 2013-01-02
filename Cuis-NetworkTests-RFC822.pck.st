@@ -1,4 +1,4 @@
-'From Cuis 4.0 of 21 April 2012 [latest update: #1308] on 7 December 2012 at 10:30:23 am'!
+'From Cuis 4.1 of 12 December 2012 [latest update: #1528] on 2 January 2013 at 8:27:14 am'!
 'Description Please enter a description for this package '!
 !classDefinition: #MailAddressParserTest category: #'Cuis-NetworkTests-RFC822'!
 TestCase subclass: #MailAddressParserTest
