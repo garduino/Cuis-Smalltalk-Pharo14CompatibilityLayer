@@ -1,4 +1,4 @@
-'From Cuis 4.1 of 12 December 2012 [latest update: #1549] on 6 January 2013 at 12:25:12 pm'!
+'From Cuis 4.1 of 12 December 2012 [latest update: #1549] on 6 January 2013 at 12:31:41 pm'!
 'Description Please enter a description for this package '!
 !classDefinition: #FTPConnectionException category: #'Cuis-Network-Protocols'!
 Error subclass: #FTPConnectionException
@@ -1414,15 +1414,15 @@ retrieveMessage: number
 defaultPortNumber
 	^110! !
 
-!POP3Client class methodsFor: 'example' stamp: 'rbb 3/1/2005 11:05'!
+!POP3Client class methodsFor: 'example' stamp: 'gsa 1/6/2013 12:29'!
 example
 	"POP3Client example"
 	"download a user's messages into an OrderedCollection and inspect the OrderedCollection"
 
 	| ps messages userName password |
-	userName := (UIManager default request: 'POP username').
-	password := (UIManager default request: 'POP password').
-	ps := POP3Client openOnHostNamed: (UIManager default request: 'POP server').
+	userName := (FillInTheBlankMorph request: 'POP username').
+	password := (FillInTheBlankMorph request: 'POP password').
+	ps := POP3Client openOnHostNamed: (FillInTheBlankMorph request: 'POP server').
 	[
 	ps loginUser: userName password: password.
 	ps logProgressToTranscript.
