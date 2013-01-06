@@ -1,4 +1,4 @@
-'From Cuis 4.1 of 12 December 2012 [latest update: #1549] on 6 January 2013 at 2:45:46 pm'!
+'From Cuis 4.1 of 12 December 2012 [latest update: #1549] on 6 January 2013 at 6:18:14 pm'!
 'Description Please enter a description for this package '!
 !classDefinition: #RemoteFileStream category: #'Cuis-Network-RemoteDirectory'!
 RWBinaryOrTextStream subclass: #RemoteFileStream
@@ -212,8 +212,11 @@ may not contain % / * or space'.
 ^ true
 ! !
 
-!ServerDirectory methodsFor: 'updates' stamp: 'Jb 10/23/2010 11:56'!
+!ServerDirectory methodsFor: 'updates' stamp: 'gsa 1/6/2013 18:15'!
 checkServersWithPrefix: prefix andParseListInto: listBlock
+
+"gsa 06/01/2013 replaced UIManager with PopUpMenu"
+
 	"Check that all servers are up and have the latest Updates.list.
 	Warn user when can't write to a server that can still be read.
 	The contents of updates.list is parsed into {{vers. {fileNames*}}*},
@@ -229,10 +232,13 @@ checkServersWithPrefix: prefix andParseListInto: listBlock
 		[listContents := updateServer getFileNamed: prefix , 'updates.list'.
 		updateLists at: updateServer put: listContents]
 			on: Error
-			do: [:ex | 
+			do: [:ex | PopUpMenu withCaption:  'Server ', updateServer moniker,
+					' is unavailable.\Please consider phoning the administator.\' withCRs, listContents
+					chooseFrom:  #('Cancel entire update').		
+				"
 				UIManager default chooseFrom: #('Cancel entire update')
 					title: 'Server ', updateServer moniker,
-					' is unavailable.\Please consider phoning the administator.\' withCRs, listContents.
+					' is unavailable.\Please consider phoning the administator.\' withCRs, listContents."
 				^Array new]].
 
 	maxSize := (updateLists collect: [:each | each size]) max.
