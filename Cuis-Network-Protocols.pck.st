@@ -1,4 +1,4 @@
-'From Cuis 4.1 of 12 December 2012 [latest update: #1528] on 2 January 2013 at 8:14:46 am'!
+'From Cuis 4.1 of 12 December 2012 [latest update: #1549] on 6 January 2013 at 12:25:12 pm'!
 'Description Please enter a description for this package '!
 !classDefinition: #FTPConnectionException category: #'Cuis-Network-Protocols'!
 Error subclass: #FTPConnectionException
@@ -1848,27 +1848,27 @@ deliverMailFrom: fromAddress to: recipientList text: messageText usingServer: aS
 		ensure: [smtpClient close]
 ! !
 
-!SMTPClient class methodsFor: 'example' stamp: 'adrian_lienhard 7/18/2009 16:00'!
+!SMTPClient class methodsFor: 'example' stamp: 'gsa 1/6/2013 12:23'!
 example
 	"SMTPClient example"
 
-	self deliverMailFrom: 'm.rueger@acm.org' to: #('m.rueger@acm.org') text:
+	self deliverMailFrom: 'cuis@cuis.org' to: #('garduino@yahoo.com') text:
 'From: test
 To: "not listed"
 Subject: this is a test
 
-Hello from Pharo!!
-'	usingServer: 'smtp.concentric.net'! !
+Hello from Cuis!!
+'	usingServer: 'smtp.comcast.net'! !
 
-!SMTPClient class methodsFor: 'example' stamp: 'adrian_lienhard 7/18/2009 16:00'!
+!SMTPClient class methodsFor: 'example' stamp: 'gsa 1/6/2013 12:23'!
 example2
 	"SMTPClient example2"
 
-	self deliverMailFrom: 'm.rueger@acm.org' to: #('m.rueger@acm.org') text:
-'Subject: this is a test
+	self deliverMailFrom: 'cuis@cuis.org' to: #('garduino@yahoo.com') text:
+'Subject: this is a test from Cuis SMTPClient
 
-Hello from Pharo!!
-'	usingServer: 'smtp.concentric.net'! !
+Hello from Cuis!!
+'	usingServer: 'smtp.comcast.net'! !
 
 !SMTPClient class methodsFor: 'accessing' stamp: 'mir 2/25/2002 19:07'!
 logFlag
