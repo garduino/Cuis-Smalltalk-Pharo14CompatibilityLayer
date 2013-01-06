@@ -35,52 +35,84 @@ SMTPClientTest class
 This class in Pharo 1.4 is on NetworkTests-Kernel, but how is only used in tests of SMTPClient I decided to put in this package Cuis-NetworkTests-Protocols. GSA - 07/12/2012!
 
 !HTTPSocketTest methodsFor: 'tests' stamp: 'StephaneDucasse 3/27/2010 22:24'!
-expandUrl	"self debug: #expandUrl"		self assert: (HTTPSocket expandUrl: 'www.pharo-project.org' ip: #[127 0 0 1] port: 8080) = 'www.pharo-project.org'.	self assert: (HTTPSocket expandUrl: '../beam' ip: #[127 0 0 1] port: 8080) = '127.0.0.1:8080/beam'.	self assert: (HTTPSocket expandUrl: '/beam' ip: #[127 0 0 1] port: 8080) = '127.0.0.1:8080/beam'.! !
+expandUrl
+	"self debug: #expandUrl"
+	
+	self assert: (HTTPSocket expandUrl: 'www.pharo-project.org' ip: #[127 0 0 1] port: 8080) = 'www.pharo-project.org'.
+	self assert: (HTTPSocket expandUrl: '../beam' ip: #[127 0 0 1] port: 8080) = '127.0.0.1:8080/beam'.
+	self assert: (HTTPSocket expandUrl: '/beam' ip: #[127 0 0 1] port: 8080) = '127.0.0.1:8080/beam'.! !
 
 !HTTPSocketTest methodsFor: 'tests' stamp: 'StephaneDucasse 3/27/2010 22:36'!
-testExpandUrl	"self debug: #testExpandUrl"		self assert: (HTTPSocket expandUrl: 'www.pharo-project.org' ip: #[127 0 0 1] port: 8080) = 'www.pharo-project.org'.	self assert: (HTTPSocket expandUrl: '../beam' ip: #[127 0 0 1] port: 8080) = '127.0.0.1:8080/beam'.	self assert: (HTTPSocket expandUrl: '/beam' ip: #[127 0 0 1] port: 8080) = '127.0.0.1:8080/beam'.! !
+testExpandUrl
+	"self debug: #testExpandUrl"
+	
+	self assert: (HTTPSocket expandUrl: 'www.pharo-project.org' ip: #[127 0 0 1] port: 8080) = 'www.pharo-project.org'.
+	self assert: (HTTPSocket expandUrl: '../beam' ip: #[127 0 0 1] port: 8080) = '127.0.0.1:8080/beam'.
+	self assert: (HTTPSocket expandUrl: '/beam' ip: #[127 0 0 1] port: 8080) = '127.0.0.1:8080/beam'.! !
 
 !HTTPSocketTest methodsFor: 'tests' stamp: 'StephaneDucasse 3/27/2010 22:51'!
-testIpPortUrlPath	"self debug: #testIpPortUrlPath"		self assert: (HTTPSocket  ip: #[127 0 0 1] port: 8080 urlPath: '/beam') = '127.0.0.1:8080/beam'! !
+testIpPortUrlPath
+	"self debug: #testIpPortUrlPath"
+	
+	self assert: (HTTPSocket  ip: #[127 0 0 1] port: 8080 urlPath: '/beam') = '127.0.0.1:8080/beam'! !
 
 !MockSocketStream methodsFor: 'testing' stamp: 'fbs 3/22/2004 13:08'!
-atEnd	^self inStream atEnd.! !
+atEnd
+	^self inStream atEnd.! !
 
 !MockSocketStream methodsFor: 'accessing' stamp: 'fbs 3/22/2004 12:51'!
-atEnd: aBoolean	atEnd := aBoolean.! !
+atEnd: aBoolean
+	atEnd := aBoolean.! !
 
 !MockSocketStream methodsFor: 'accessing' stamp: 'fbs 3/22/2004 13:29'!
-inStream	^inStream! !
+inStream
+	^inStream! !
 
 !MockSocketStream methodsFor: 'initialization' stamp: 'alain.plantec 5/28/2009 10:08'!
-initialize	super initialize.	self resetInStream.	self resetOutStream.! !
+initialize
+	super initialize.
+	self resetInStream.
+	self resetOutStream.! !
 
 !MockSocketStream methodsFor: 'stream in' stamp: 'fbs 3/22/2004 13:10'!
-nextLine	^self nextLineCrLf! !
+nextLine
+	^self nextLineCrLf! !
 
 !MockSocketStream methodsFor: 'stream in' stamp: 'gsa 12/7/2012 17:02'!
-nextLineCrLf	^(self upToAll: String crlfString).! !
+nextLineCrLf
+	^(self upToAll: String crlfString).! !
 
 !MockSocketStream methodsFor: 'accessing' stamp: 'fbs 3/22/2004 13:08'!
-outStream	^outStream! !
+outStream
+	^outStream! !
 
 !MockSocketStream methodsFor: 'stream in' stamp: 'PeterHugossonMiller 9/3/2009 10:05'!
-resetInStream	inStream := String new writeStream.! !
+resetInStream
+	inStream := String new writeStream.! !
 
 !MockSocketStream methodsFor: 'stream out' stamp: 'PeterHugossonMiller 9/3/2009 10:05'!
-resetOutStream	outStream := String new writeStream.! !
+resetOutStream
+	outStream := String new writeStream.! !
 
 !MockSocketStream methodsFor: 'stream out' stamp: 'gsa 12/7/2012 17:01'!
-sendCommand: aString	self outStream		nextPutAll: aString;		nextPutAll: String crlfString.! !
+sendCommand: aString
+	self outStream
+		nextPutAll: aString;
+		nextPutAll: String crlfString.! !
 
 !MockSocketStream methodsFor: 'stream in' stamp: 'fbs 3/22/2004 13:09'!
-upToAll: delims	^self inStream upToAll: delims.! !
+upToAll: delims
+	^self inStream upToAll: delims.! !
 
 !MockSocketStream class methodsFor: 'instance creation' stamp: 'fbs 3/22/2004 12:46'!
-on: socket	^self basicNew initialize! !
+on: socket
+	^self basicNew initialize! !
 
 !SMTPClientTest methodsFor: 'running' stamp: 'fbs 3/22/2004 13:11'!
-setUp	socket := MockSocketStream on: ''.	smtp := SMTPClient new.	smtp stream: socket.! !
+setUp
+	socket := MockSocketStream on: ''.
+	smtp := SMTPClient new.
+	smtp stream: socket.! !
 
 !SMTPClientTest methodsFor: 'testing' stamp: 'gsa 12/7/2012 17:03'!
 testMailFrom
