@@ -1,4 +1,4 @@
-'From Cuis 4.1 of 12 December 2012 [latest update: #1549] on 6 January 2013 at 12:31:41 pm'!
+'From Cuis 4.1 of 12 December 2012 [latest update: #1549] on 6 January 2013 at 7:32:02 pm'!
 'Description Please enter a description for this package '!
 !classDefinition: #FTPConnectionException category: #'Cuis-Network-Protocols'!
 Error subclass: #FTPConnectionException
@@ -38,6 +38,16 @@ Socket subclass: #HTTPSocket
 	category: 'Cuis-Network-Protocols'!
 !classDefinition: 'HTTPSocket class' category: #'Cuis-Network-Protocols'!
 HTTPSocket class
+	instanceVariableNames: ''!
+
+!classDefinition: #HTTPSocketSqueak category: #'Cuis-Network-Protocols'!
+Object subclass: #HTTPSocketSqueak
+	instanceVariableNames: ''
+	classVariableNames: 'HTTPBlabEmail HTTPPort HTTPProxyCredentials HTTPProxyExceptions HTTPProxyPort HTTPProxyServer HTTPRequestHandler'
+	poolDictionaries: ''
+	category: 'Cuis-Network-Protocols'!
+!classDefinition: 'HTTPSocketSqueak class' category: #'Cuis-Network-Protocols'!
+HTTPSocketSqueak class
 	instanceVariableNames: ''!
 
 !classDefinition: #ProtocolClient category: #'Cuis-Network-Protocols'!
@@ -186,6 +196,16 @@ I include
 HTTPSockets support HTTP requests, either directly or via an HTTP proxy server. An HTTPSocket saves the parse of the last ASCII header it saw, to avoid having to parse it repeatedly.
 
 The real action is in httpGet:accept:.  See the examples in the class, especially httpFileInNewChangeSet: and httpShowGif:.!
+
+!HTTPSocketSqueak commentStamp: 'ar 7/10/2010 14:05' prior: 0!
+HTTPSockets is a facade for handling common HTTP requests. It provides a minimal implementation of the HTTP protocol, but can be extended by third party clients that register themselves as #httpRequestHandler (see class-side protocol).
+
+A third-party request handler needs to implement the single method
+
+	#httpRequest:url:headers:content:response:
+
+in a way that is compatible with the baseline implementation in HTTPSocket.
+!
 
 !LoginFailedException commentStamp: '<historical>' prior: 0!
 Exception for signaling login failures of protocol clients.
@@ -1048,6 +1068,29 @@ expandUrl: newUrl ip: byteArrayIP port: portNum
 	(newUrl beginsWith: '/') ifTrue: [^self ip: byteArrayIP port: portNum urlPath: newUrl].
 	^newUrl! !
 
+!HTTPSocket class methodsFor: 'fromSqueak' stamp: 'gsa 1/6/2013 19:00'!
+httpGetDocument: url args: args accept: mimeType request: requestString
+	"Return the exact contents of a web object. Asks for the given MIME type. If mimeType is nil, use 'text/html'. An extra requestString may be submitted and must end with crlf.  The parsed header is saved. Use a proxy server if one has been registered.  tk 7/23/97 17:12"
+
+	"Note: To fetch raw data, you can use the MIME type 'application/octet-stream'."
+
+	| urlString |
+	"Normalize the url"
+	urlString := (Url absoluteFromText: url) asString.
+
+	args ifNotNil: [
+		urlString := urlString, (self argString: args) 
+	].
+
+	^(self httpRequestHandler) 
+		httpRequest: 'GET' url: urlString headers:(
+			(mimeType ifNil:[''] ifNotNil:['Accept: ', mimeType, String crlf]),
+			'Accept: text/html', String crlf,
+			HTTPProxyCredentials,
+			HTTPBlabEmail,
+			requestString
+		) content: nil response: nil.! !
+
 !HTTPSocket class methodsFor: 'get the page' stamp: 'dc 10/21/2008 08:55'!
 httpGetNoError: url args: args accept: mimeType
 	"Return the exact contents of a web file.  Do better error checking.  Asks for the given MIME type.  To fetch raw data, you can use the MIMI type 'application/octet-stream'.  If mimeType is nil, use 'text/html'.  The parsed header is saved. Use a proxy server if one has been registered."
@@ -1249,6 +1292,656 @@ useProxyServerNamed: proxyServerName port: portNum proxyUser: aString password: 
 !HTTPSocket class methodsFor: 'utilities' stamp: 'tak 9/25/2008 15:09'!
 userAgentString 
 	"self userAgentString."
+
+	^'User-Agent: ',
+		SystemVersion current version, '-', 
+		SystemVersion current highestUpdate printString! !
+
+!HTTPSocketSqueak class methodsFor: 'proxy settings' stamp: 'mir 7/30/1999 16:08'!
+addProxyException: domainName
+	"Add a (partial, wildcard) domain name to the list of proxy exceptions"
+	"HTTPSocket addProxyException: '*.online.disney.com'"
+
+	self httpProxyExceptions add: domainName! !
+
+!HTTPSocketSqueak class methodsFor: 'utilities' stamp: 'ar 4/10/2005 18:47'!
+argString: args
+	"Return the args in a long string, as encoded in a url"
+
+	| argsString first |
+	args isString ifTrue: ["sent in as a string, not a dictionary"
+		^ (args first = $? ifTrue: [''] ifFalse: ['?']), args].
+	argsString := WriteStream on: String new.
+	argsString nextPut: $?.
+	first := true.
+	args associationsDo: [ :assoc |
+		assoc value do: [ :value |
+			first ifTrue: [ first := false ] ifFalse: [ argsString nextPut: $& ].
+			argsString nextPutAll: assoc key encodeForHTTP.
+			argsString nextPut: $=.
+			argsString nextPutAll: value encodeForHTTP. ] ].
+	^ argsString contents
+! !
+
+!HTTPSocketSqueak class methodsFor: 'class initialization' stamp: 'tk 9/21/1998 10:45'!
+blabEmail: aRequest
+	"Of the form 'From: me@isp.com <crlf>'"
+	HTTPBlabEmail := aRequest! !
+
+!HTTPSocketSqueak class methodsFor: 'class initialization' stamp: 'ls 9/17/1998 07:17'!
+defaultPort
+	"default port to connect on"
+	^80! !
+
+!HTTPSocketSqueak class methodsFor: 'proxy settings' stamp: 'hpt 12/9/2004 22:51'!
+fetchExternalSettingsIn: aDirectory
+	"Scan for server configuration files"
+	"HTTPSocket fetchExternalSettingsIn: (FileDirectory default directoryNamed: 'prefs')"
+
+	| stream entries |
+	(aDirectory fileExists: self proxySettingsFileName)
+		ifFalse: [^self].
+	stream := aDirectory readOnlyFileNamed: self proxySettingsFileName.
+	stream
+		ifNotNil: [
+			[entries := ExternalSettings parseServerEntryArgsFrom: stream]
+				ensure: [stream close]].
+
+	entries ifNil: [^self].
+
+	self httpProxyServer:  (entries at: 'host' ifAbsent: [nil]).
+	self httpProxyPort: ((entries at: 'port' ifAbsent: ['80']) asInteger ifNil: [self defaultPort]).
+	HTTPSocket addProxyException: (entries at: 'exception' ifAbsent: [nil])! !
+
+!HTTPSocketSqueak class methodsFor: 'get the page' stamp: 'ar 4/10/2005 18:47'!
+httpFileIn: url
+	"Do a regular file-in of a file that is served from a web site.  If the file contains an EToy, then open it.  Might just be code instead.  tk 7/23/97 17:10"
+	"Notes: To store a file on an HTTP server, use the program 'Fetch'.  After indicating what file to store, choose 'Raw Data' from the popup menu that has MacBinary/Text/etc.  Use any file extension as long as it is not one of the common ones.  The server does not have to know about the .sqo extension in order to send your file.  (We do not need a new MIME type and .sqo does not have to be registered with the server.)"
+	"	HTTPSocket httpFileIn: 'www.webPage.com/~kaehler2/sample.etoy'	 "
+	"	HTTPSocket httpFileIn: '206.18.68.12/squeak/car.sqo'	 "
+	"	HTTPSocket httpFileIn: 'jumbo/tedk/sample.etoy'	 "
+
+	| doc eToyHolder |
+	doc := self httpGet: url accept: 'application/octet-stream'.
+	doc isString ifTrue:
+			[self inform: 'Cannot seem to contact the web site'].
+	doc reset.
+	eToyHolder := doc fileInObjectAndCode.
+
+	eToyHolder ifNotNil: [eToyHolder open].
+	"Later may want to return it, instead of open it"
+! !
+
+!HTTPSocketSqueak class methodsFor: 'get the page' stamp: 'ar 9/27/2005 20:07'!
+httpFileInNewChangeSet: url
+	"Do a regular file-in of a file that is served from a web site.  Put it into a new changeSet."
+	"Notes: To store a file on an HTTP server, use the program 'Fetch'.  After indicating what file to store, choose 'Raw Data' from the popup menu that has MacBinary/Text/etc.  Use any file extension as long as it is not one of the common ones."
+	"	HTTPSocket httpFileInNewChangeSet: '206.18.68.12/squeak/updates/83tk:=test.cs'	 "
+
+	| doc |
+	doc := self httpGet: url accept: 'application/octet-stream'.
+	doc isString ifTrue:
+			[self inform: 'Cannot seem to contact the web site'].
+	doc reset.
+	ChangeSet newChangesFromStream: doc
+				named: (url findTokens: '/') last.! !
+
+!HTTPSocketSqueak class methodsFor: 'get the page' stamp: 'tk 12/7/2001 17:36'!
+httpGet: url
+	"Return the exact contents of a web page or other web object. The parsed header is saved.  Use a proxy server if one has been registered.  tk 7/23/97 17:21"
+	"	HTTPSocket httpShowPage: 'http://www.altavista.digital.com/index.html'	 "
+	"	HTTPSocket httpShowPage: 'www.webPage.com/~kaehler2/ab.html'	 "
+	"	HTTPSocket httpShowPage: 'www.exploratorium.edu/index.html'	 "
+	"	HTTPSocket httpShowPage: 'www.apple.com/default.html'	 "
+	"	HTTPSocket httpShowPage: 'www.altavista.digital.com/'	 "
+	"	HTTPSocket httpShowPage: 'jumbo/tedk/ab.html'	 "
+
+	^ self httpGet: url accept: '*/*'
+! !
+
+!HTTPSocketSqueak class methodsFor: 'get the page' stamp: 'tk 12/7/2001 17:37'!
+httpGet: url accept: mimeType
+	"Return the exact contents of a web object. Asks for the given MIME type. If mimeType is nil, use 'text/html'. The parsed header is saved. Use a proxy server if one has been registered.
+	Note: To fetch raw data, you can use the MIME type 'application/octet-stream'.  To accept anything, use '*/*'."
+
+	^self httpGet: url  args: nil accept: mimeType! !
+
+!HTTPSocketSqueak class methodsFor: 'get the page' stamp: 'hg 2/12/2002 11:39'!
+httpGet: url args: args accept: mimeType
+
+	^self httpGet: url args: args accept: mimeType request: ''! !
+
+!HTTPSocketSqueak class methodsFor: 'get the page' stamp: 'nk 8/30/2004 07:50'!
+httpGet: url args: args accept: mimeType request: requestString
+	"Return the exact contents of a web object. Asks for the given MIME type. If mimeType is nil, use 'text/html'. The parsed header is saved. Use a proxy server if one has been registered.  tk 7/23/97 17:12"
+	"Note: To fetch raw data, you can use the MIME type 'application/octet-stream'."
+
+	| document |
+	document := self httpGetDocument: url  args: args  accept: mimeType request: requestString.
+	(document isString) ifTrue: [
+		"strings indicate errors"
+		^ document ].
+
+	^ (RWBinaryOrTextStream with: document content) reset
+! !
+
+!HTTPSocketSqueak class methodsFor: 'get the page' stamp: 'ar 6/27/2010 12:21'!
+httpGet: url args: args user: user passwd: passwd
+	"Upload the contents of the stream to a file on the server.
+
+	WARNING: This method will send a basic auth header proactively.
+	This is necessary to avoid breaking MC and SqueakSource since SS does not 
+	return a 401 when accessing a private (global no access) repository."
+
+	| authorization result |
+	authorization := (user , ':' , passwd) base64Encoded.
+	result := self 
+		httpGet: url args: args accept: '*/*' 
+		request: 'Authorization: Basic ' , authorization , String crlf.
+	^result
+! !
+
+!HTTPSocketSqueak class methodsFor: 'get the page' stamp: 'tk 9/22/1998 23:25'!
+httpGetDocument: url
+	"Return the exact contents of a web page or other web object. The parsed header is saved.  Use a proxy server if one has been registered.  tk 7/23/97 17:21"
+	"	HTTPSocket httpShowPage: 'http://www.altavista.digital.com/index.html'	 "
+	"	HTTPSocket httpShowPage: 'www.webPage.com/~kaehler2/ab.html'	 "
+	"	HTTPSocket httpShowPage: 'www.exploratorium.edu/index.html'	 "
+	"	HTTPSocket httpShowPage: 'www.apple.com/default.html'	 "
+	"	HTTPSocket httpShowPage: 'www.altavista.digital.com/'	 "
+	"	HTTPSocket httpShowPage: 'jumbo/tedk/ab.html'	 "
+
+	^ self httpGetDocument: url args: nil accept: 'application/octet-stream' request: ''
+! !
+
+!HTTPSocketSqueak class methodsFor: 'get the page' stamp: 'tk 9/22/1998 23:26'!
+httpGetDocument: url accept: mimeType
+	"Return the exact contents of a web object. Asks for the given MIME type. If mimeType is nil, use 'text/html'. The parsed header is saved. Use a proxy server if one has been registered.  tk 7/23/97 17:12"
+	^self httpGetDocument: url args: nil accept: mimeType request: ''! !
+
+!HTTPSocketSqueak class methodsFor: 'get the page' stamp: 'tk 9/22/1998 23:26'!
+httpGetDocument: url args: args
+	"Return the exact contents of a web object. Asks for the given MIME type. If mimeType is nil, use 'text/html'. The parsed header is saved. Use a proxy server if one has been registered.  tk 7/23/97 17:12"
+	"Note: To fetch raw data, you can use the MIMI type 'application/octet-stream'."
+	^self httpGetDocument: url args: args accept: 'application/octet-stream' request: ''! !
+
+!HTTPSocketSqueak class methodsFor: 'get the page' stamp: 'tk 9/22/1998 17:48'!
+httpGetDocument: url args: args accept: mimeType
+	"Return the exact contents of a web object. Asks for the given MIME type. If mimeType is nil, use 'text/html'. The parsed header is saved. Use a proxy server if one has been registered.  Note: To fetch raw data, you can use the MIME type 'application/octet-stream'."
+
+	^ self httpGetDocument: url args: args accept: mimeType request: ''! !
+
+!HTTPSocketSqueak class methodsFor: 'get the page' stamp: 'ar 7/12/2010 18:54'!
+httpGetDocument: url args: args accept: mimeType request: requestString
+	"Return the exact contents of a web object. Asks for the given MIME type. If mimeType is nil, use 'text/html'. An extra requestString may be submitted and must end with crlf.  The parsed header is saved. Use a proxy server if one has been registered.  tk 7/23/97 17:12"
+
+	"Note: To fetch raw data, you can use the MIME type 'application/octet-stream'."
+
+	| urlString |
+	"Normalize the url"
+	urlString := (Url absoluteFromText: url) asString.
+
+	args ifNotNil: [
+		urlString := urlString, (self argString: args) 
+	].
+
+	^(self httpRequestHandler) 
+		httpRequest: 'GET' url: urlString headers:(
+			(mimeType ifNil:[''] ifNotNil:['Accept: ', mimeType, String crlf]),
+			'Accept: text/html', String crlf,
+			HTTPProxyCredentials,
+			HTTPBlabEmail,
+			requestString
+		) content: nil response: nil.! !
+
+!HTTPSocketSqueak class methodsFor: 'get the page' stamp: 'nk 8/30/2004 07:50'!
+httpGetNoError: url args: args accept: mimeType
+	"Return the exact contents of a web file.  Do better error checking.  Asks for the given MIME type.  To fetch raw data, you can use the MIMI type 'application/octet-stream'.  If mimeType is nil, use 'text/html'.  The parsed header is saved. Use a proxy server if one has been registered."
+
+"Edited to remove a lineFeed from the source 4/4/99 - di"
+
+	| document data |
+	document := self httpGetDocument: url  args: args  accept: mimeType.
+	(document isString) ifTrue: [
+		"strings indicate errors"
+		^ document ].
+	data := document content.
+	(data beginsWith: '<HTML><HEAD>' , (String with: Character linefeed) , '<TITLE>4')
+		ifTrue: ["an error message  404 File not found"
+				^ data copyFrom: 21 to: data size-16].	
+
+	^ (RWBinaryOrTextStream with: data) reset
+! !
+
+!HTTPSocketSqueak class methodsFor: 'get the page' stamp: 'ar 4/10/2005 18:48'!
+httpGif: url
+	"Fetch the given URL, parse it using the GIF reader, and return the resulting Form."
+	"	HTTPSocket httpShowGif: 'www.altavista.digital.com/av/pix/default/av-adv.gif'	 "
+	"	HTTPSocket httpShowGif: 'www.webPage.com/~kaehler2/ainslie.gif'	 "
+
+	| doc ggg |
+	doc := self httpGet: url accept: 'image/gif'.
+	doc isString ifTrue: [
+		self inform: 'The server with that GIF is not responding'.
+		^ ColorForm extent: 20@20 depth: 8].
+	doc binary; reset.
+	(ggg := GIFReadWriter new) setStream: doc.
+	^ ggg nextImage.
+! !
+
+!HTTPSocketSqueak class methodsFor: 'get the page' stamp: 'nk 7/7/2003 18:37'!
+httpJpeg: url
+	"Fetch the given URL, parse it using the JPEG reader, and return the resulting Form."
+
+	| doc ggg |
+	doc := self httpGet: url.
+	doc binary; reset.
+	(ggg := JPEGReadWriter new) setStream: doc.
+	^ ggg nextImage.
+! !
+
+!HTTPSocketSqueak class methodsFor: 'get the page' stamp: 'nk 8/30/2004 07:50'!
+httpPost: url  args: argsDict accept: mimeType 
+	"like httpGET, except it does a POST instead of a GET.  POST allows data to be uploaded"
+	| document |
+	document := self httpPostDocument: url  args: argsDict  accept: mimeType  request: ''.
+	(document isString) ifTrue: [ 
+		"strings indicate errors"
+		^document ].
+
+	
+	^RWBinaryOrTextStream with: document content! !
+
+!HTTPSocketSqueak class methodsFor: 'get the page' stamp: 'ar 6/27/2010 12:23'!
+httpPost: url args: args user: user passwd: passwd
+
+	"WARNING: This method will send a basic auth header proactively.
+	This is necessary to avoid breaking MC and SqueakSource since SS does not 
+	return a 401 when accessing a private (global no access) repository."
+
+	| authorization |
+	authorization := (user , ':' , passwd) base64Encoded.
+	^self 
+		httpPostDocument: url args: args accept: '*/*' 
+		request: 'Authorization: Basic ' , authorization , String crlf
+! !
+
+!HTTPSocketSqueak class methodsFor: 'get the page' stamp: 'ar 7/10/2010 13:52'!
+httpPost: url content: postData type: contentType accept: mimeType request: requestString
+	"like httpGET, except it does a POST instead of a GET.  POST allows data to be uploaded"
+
+	| urlString |
+	"Normalize the url"
+	urlString := (Url absoluteFromText: url) asString.
+
+	^(self httpRequestHandler) 
+		httpRequest: 'POST' url: urlString headers:(
+			'Accept: ', mimeType, String crlf,
+			'Accept: text/html', String crlf,
+			'Content-Type: ', contentType, String crlf,
+			'Content-Length: ', (postData ifNil:['']) size, String crlf,
+			HTTPProxyCredentials,
+			HTTPBlabEmail,
+			requestString "extra user request. Authorization"
+		) content: (postData ifNil:['']) response: nil! !
+
+!HTTPSocketSqueak class methodsFor: 'get the page' stamp: 'tk 9/22/1998 23:27'!
+httpPostDocument: url  args: argsDict
+	"like httpGET, except it does a POST instead of a GET.  POST allows data to be uploaded"
+
+	^self httpPostDocument: url args: argsDict accept: 'application/octet-stream' request: ''! !
+
+!HTTPSocketSqueak class methodsFor: 'get the page' stamp: 'tk 9/22/1998 20:16'!
+httpPostDocument: url  args: argsDict accept: mimeType 
+	"like httpGET, except it does a POST instead of a GET.  POST allows data to be uploaded"
+
+	^ self httpPostDocument: url args: argsDict accept: mimeType request: ''
+! !
+
+!HTTPSocketSqueak class methodsFor: 'get the page' stamp: 'ar 2/25/2010 15:49'!
+httpPostDocument: url  args: args accept: mimeType request: requestString
+	"like httpGET, except it does a POST instead of a GET.  POST allows data to be uploaded"
+
+	| argString  |
+	args ifNotNil: [
+		argString := self argString: args.
+		argString first = $? ifTrue: [argString := argString allButFirst].
+	].
+
+	^self httpPost: url 
+			content: argString 
+			type: 'application/x-www-form-urlencoded' 
+			accept: mimeType 
+			request: requestString! !
+
+!HTTPSocketSqueak class methodsFor: 'get the page' stamp: 'ar 6/17/2010 20:30'!
+httpPostToSuperSwiki: url args: argsDict accept: mimeType request: requestString
+
+	| mimeBorder argString |
+	mimeBorder := '---------SuperSwiki',Time millisecondClockValue printString,'-----'.
+	argString := String streamContents: [ :strm |
+		strm nextPutAll: mimeBorder, String crlf.
+		argsDict associationsDo: [:assoc |
+			assoc value do: [ :value |
+				strm
+					nextPutAll: 'Content-disposition: form-data; name="', assoc key, '"';
+					nextPutAll: String crlf;
+					nextPutAll: String crlf;
+					nextPutAll: value;
+					nextPutAll: String crlf;
+					nextPutAll: String crlf;
+					nextPutAll: mimeBorder;
+					nextPutAll: String crlf.
+			]
+		].
+	].
+
+	^self httpPost: url 
+			content: argString 
+			type:  'multipart/form-data; boundary=', mimeBorder
+			accept: mimeType 
+			request: requestString
+! !
+
+!HTTPSocketSqueak class methodsFor: 'proxy settings' stamp: 'mir 7/30/1999 15:03'!
+httpProxyExceptions
+	HTTPProxyExceptions ifNil: [HTTPProxyExceptions := OrderedCollection new].
+	^HTTPProxyExceptions! !
+
+!HTTPSocketSqueak class methodsFor: 'proxy settings' stamp: 'ar 6/17/2010 20:42'!
+httpProxyPort
+	"answer the httpProxyPort"
+	<preference: 'HTTP Proxy Port'
+		category: 'HTTP Proxy'
+		description: 'HTTP Proxy Port'
+		type: #Number>
+	^HTTPProxyPort ifNil:[80]! !
+
+!HTTPSocketSqueak class methodsFor: 'proxy settings' stamp: 'ar 6/17/2010 20:42'!
+httpProxyPort: aPortNumber
+	"Set the proxy port"
+	HTTPProxyPort := aPortNumber.! !
+
+!HTTPSocketSqueak class methodsFor: 'proxy settings' stamp: 'ar 6/17/2010 20:42'!
+httpProxyServer
+	"answer the httpProxyServer. Take into account that as a Preference the Server might appear as an empty string but HTTPSocket expect it to be nil"
+	<preference: 'HTTP Proxy Server'
+		category: 'HTTP Proxy'
+		description: 'HTTP Proxy Server. Leave blank if you don''t want to use a Proxy'
+		type: #String>
+	^HTTPProxyServer ifNil:['']
+! !
+
+!HTTPSocketSqueak class methodsFor: 'proxy settings' stamp: 'ar 6/17/2010 20:43'!
+httpProxyServer: aString
+	"answer the httpProxyServer. Take into account that as a Preference the Server might appear as an empty string but HTTPSocket expect it to be nil"
+	HTTPProxyServer := aString.
+! !
+
+!HTTPSocketSqueak class methodsFor: 'get the page' stamp: 'ar 7/10/2010 13:53'!
+httpPut: contents to: url user: user passwd: passwd
+	"Upload the contents of the stream to a file on the server
+	
+	WARNING: This method will send a basic auth header proactively.
+	This is necessary to avoid breaking MC and SqueakSource since SS does not 
+	return a 401 when accessing a private (global no access) repository."
+
+	| urlString resp header |
+
+	"Normalize the url"
+	urlString := (Url absoluteFromText: url) asString.
+
+	resp := (self httpRequestHandler) 
+		httpRequest: 'PUT' url: urlString headers:(
+			'Authorization: Basic ', (user, ':', passwd) base64Encoded, String crlf,
+			'Accept: */*', String crlf,
+			'Content-Type: application/octet-stream', String crlf,
+			'Content-Length: ', (contents ifNil:['']) size, String crlf,
+			HTTPProxyCredentials,
+			HTTPBlabEmail
+		) content: contents response:[:rr| header := rr].
+	^resp isString ifTrue:[header, resp] ifFalse:[header, resp content]! !
+
+!HTTPSocketSqueak class methodsFor: 'get the page' stamp: 'ar 9/4/2010 10:47'!
+httpRequest: method url: urlString headers: hdrs content: contentOrNil response: responseBlock
+
+	"Sends an HTTP request to the server. Returns a MIMEDocument if successful,
+	a string indicating the error otherwise. If a response block is provided, the
+	response is fed into into so that the sender can see all the headers.
+	The url string is assumed to be properly escaped by the sender."
+
+	| index serverAndPort server port rawUrl stream resp code headers 
+	  contentLength contentType contentStream |
+
+	(urlString beginsWith: 'http://') ifFalse:[self error: 'Not a http url'].
+
+	"Extract server, port, and url"
+	index := urlString indexOf: $/ startingAt: 8 ifAbsent:[urlString size+1]. "past http://"
+	serverAndPort := urlString copyFrom: 8 to: index-1.
+	server := serverAndPort copyUpTo: $:.
+	port := ((serverAndPort copyAfter: $:) ifEmpty:['80']) asNumber.
+
+	"Prepare the request URI"
+	rawUrl := urlString copyFrom: index to: urlString size.
+	(rawUrl beginsWith: '/') ifFalse:[rawUrl := '/', rawUrl].
+
+	"Check for proxy"
+	(self shouldUseProxy: server) ifTrue:[
+		self httpProxyServer ifNotEmpty:[
+			rawUrl := 'http://', serverAndPort, rawUrl. "per RFC 2616"
+			server := self httpProxyServer.
+			port := self httpProxyPort.
+		].
+	].
+
+	"Fire off the request"
+	stream := SocketStream openConnectionToHostNamed: server port: port.
+	stream nextPutAll: method; space; nextPutAll: rawUrl; space; nextPutAll: 'HTTP/1.0'; crlf.
+	stream nextPutAll: 'Host: ', serverAndPort; crlf.
+	stream nextPutAll: 'Connection: close'; crlf.
+	stream nextPutAll: 'User-Agent: ', self userAgentString; crlf.
+	stream nextPutAll: hdrs.
+	stream crlf.
+
+	contentOrNil ifNotNil:[
+		"Upload request content"
+		contentStream := contentOrNil readStream.
+		[contentStream atEnd] whileFalse:[
+			(HTTPProgress new) total: contentOrNil size; 
+				amount: contentStream position; signal: 'Uploading...'.
+			stream nextPutAll: (contentStream next: 4096).
+			stream flush.
+		].
+	].
+
+	stream flush.
+
+	"Read the response"
+	resp := stream upToAll: String crlfcrlf.
+	"Extract the response code"
+	code := ((resp copyUpTo: String cr) findTokens: ' ') second asNumber.
+	"And the response headers"
+	headers := Dictionary new.
+	resp lines allButFirst allButLast do:[:nextLine|
+		headers at: (nextLine copyUpTo: $:) asLowercase 
+			put: (nextLine copyAfter: $:) withBlanksTrimmed.
+	].
+
+	"Read response content"
+	contentLength := headers at: 'content-length' ifAbsent:[nil].
+	contentType := headers at: 'content-type' ifAbsent:['application/octet-stream'].
+	"Fixme - Provide HTTProgress"
+	contentLength 
+		ifNil:[contentStream := WriteStream with: stream upToEnd]
+		ifNotNil:[
+			contentLength := contentLength asNumber.
+			contentStream := (String new: contentLength) writeStream. 
+			[contentStream position < contentLength] whileTrue:[
+				contentStream nextPutAll: 
+					(stream next: (contentLength - contentStream position min: 4096)).
+				(HTTPProgress new) total: contentLength; 
+					amount: contentStream position; signal: 'Downloading...'.
+			].
+		].
+	stream close.
+
+	responseBlock ifNotNil:[responseBlock value: resp].
+
+	^(code between: 200 and: 299) 
+		ifTrue:[MIMEDocument contentType: contentType 
+				content: contentStream contents url: urlString]
+		ifFalse:[resp asString, contentStream contents].
+! !
+
+!HTTPSocketSqueak class methodsFor: 'handler' stamp: 'ar 7/10/2010 13:34'!
+httpRequestHandler
+	"Answer the registered handler for http requests. The handler needs to implement 
+	#httpRequest:url:headers:content:response: compatible with the baseline version
+	in HTTPSocket. If no handler is registered, answer the receiver"
+
+	^HTTPRequestHandler ifNil:[self]! !
+
+!HTTPSocketSqueak class methodsFor: 'handler' stamp: 'ar 7/10/2010 13:35'!
+httpRequestHandler: anObject
+	"Set the registered handler for http requests. The handler needs to implement 
+	#httpRequest:url:headers:content:response: compatible with the baseline version
+	in HTTPSocket."
+
+	HTTPRequestHandler := anObject! !
+
+!HTTPSocketSqueak class methodsFor: 'get the page' stamp: 'ar 4/10/2005 18:48'!
+httpShowChunk: url
+	"From a Swiki server, get a text chunk in the changes file.  Show its text in a window with style.  Vertical bar separates class and selector.  BE SURE TO USE ; instead of : in selectors!!"
+	"	HTTPSocket httpShowChunk: 'http://206.16.12.145:80/OurOwnArea.chunk.Socket|Comment'	 "
+	"	HTTPSocket httpShowChunk: 'http://206.16.12.145:80/OurOwnArea.chunk.Point|class|x;y;'	"
+
+	| doc text |
+	doc := (self httpGet: url accept: 'application/octet-stream').
+"	doc size = 0 ifTrue: [doc := 'The server does not seem to be responding']."
+	doc isString ifTrue: [text := doc] ifFalse: [text := doc nextChunkText].
+	(StringHolder new contents: text) openLabel: url.
+! !
+
+!HTTPSocketSqueak class methodsFor: 'get the page' stamp: 'sma 4/30/2000 09:50'!
+httpShowGif: url
+	"Display the picture retrieved from the given URL, which is assumed to be a GIF file.
+	See examples in httpGif:."
+
+	self showImage: (self httpGif: url) named: (url findTokens: '/') last! !
+
+!HTTPSocketSqueak class methodsFor: 'get the page' stamp: 'sma 4/30/2000 09:51'!
+httpShowJpeg: url
+	"Display the picture retrieved from the given URL, which is assumed to be a JPEG file.
+	See examples in httpGif:."
+
+	self showImage: (self httpJpeg: url) named: (url findTokens: '/') last! !
+
+!HTTPSocketSqueak class methodsFor: 'get the page' stamp: 'KR 5/10/2008 15:31'!
+httpShowPage: url
+	"Display the exact contents of the given URL as text. See examples in httpGet:"
+
+	| doc |
+	doc := (self httpGet: url accept: 'application/octet-stream') contents.
+	doc size = 0 ifTrue: [^ self error: 'Document could not be fetched' translated].
+	(StringHolder new contents: doc) openLabel: url.
+! !
+
+!HTTPSocketSqueak class methodsFor: 'class initialization' stamp: 'ar 7/10/2010 13:59'!
+initialize
+	"HTTPSocket initialize"
+
+	HTTPPort := 80.
+	self httpProxyServer: nil.
+	HTTPBlabEmail := ''.  "	'From: somebody@no.where', CrLf	"
+	HTTPProxyCredentials := ''.
+
+	ExternalSettings registerClient: self.
+	self removeHTTPProxyPreferences.! !
+
+!HTTPSocketSqueak class methodsFor: 'proxy settings' stamp: 'mir 8/23/2002 14:29'!
+proxySettingsFileName
+	^'proxySettings'! !
+
+!HTTPSocketSqueak class methodsFor: 'proxy settings' stamp: 'jcg 9/1/2009 00:35'!
+proxyUser: userName password: password
+	"Store  HTTP 1.0 basic authentication credentials
+	Note: this is an ugly hack that stores your password
+	in your image.  It's just enought to get you going
+	if you use a firewall that requires authentication"
+	| encoded |
+	encoded := (userName, ':', password) base64Encoded.
+	HTTPProxyCredentials := 'Proxy-Authorization: Basic ' , encoded, String crlf! !
+
+!HTTPSocketSqueak class methodsFor: 'proxy settings' stamp: 'ar 7/10/2010 14:01'!
+removeHTTPProxyPreferences
+	" This method will remove the old HTTP Proxy preferences. "
+	(Preferences valueOfPreference: #httpProxyServer) ifNotNil:[
+		HTTPProxyServer := Preferences valueOfPreference: #httpProxyServer.
+		Preferences removePreference: #httpProxyServer.
+	].
+	(Preferences valueOfPreference: #httpProxyPort) ifNotNil:[
+		HTTPProxyPort := Preferences valueOfPreference: #httpProxyPort.
+		Preferences removePreference: #httpProxyPort.
+	].
+! !
+
+!HTTPSocketSqueak class methodsFor: 'proxy settings' stamp: 'mir 7/30/1999 15:03'!
+removeProxyException: domainName
+	"Remove a (partial, wildcard) domain name from the list of proxy exceptions"
+
+	self httpProxyExceptions remove: domainName ifAbsent: []! !
+
+!HTTPSocketSqueak class methodsFor: 'utilities' stamp: 'hpt 12/10/2004 23:21'!
+shouldUseProxy: serverName
+	"Retrieve the server and port information from the URL, match it to the proxy settings and open a http socket for the request."
+
+	self httpProxyServer ifNotEmpty: [
+		self httpProxyExceptions
+			detect: [:domainName | domainName match: serverName]
+			ifNone: [^true]].
+	^false
+! !
+
+!HTTPSocketSqueak class methodsFor: 'utilities' stamp: 'dtl 2/12/2010 20:42'!
+showImage: image named: imageName
+
+	Project current showImage: image named: imageName
+! !
+
+!HTTPSocketSqueak class methodsFor: 'proxy settings' stamp: 'hpt 12/9/2004 22:55'!
+stopUsingProxyServer
+	"Stop directing HTTP request through a proxy server."
+
+	self httpProxyServer: nil.
+	self httpProxyPort: 80.
+	HTTPProxyCredentials := ''
+! !
+
+!HTTPSocketSqueak class methodsFor: 'proxy settings' stamp: 'ul 12/14/2009 08:08'!
+useProxyServerNamed: proxyServerName port: portNum
+	"Direct all HTTP requests to the HTTP proxy server with the given name and port number."
+
+	proxyServerName ifNil: [  "clear proxy settings"
+		self httpProxyServer: nil.
+		self httpProxyPort: 80.
+		^ self].
+
+	proxyServerName isString
+		ifFalse: [self error: 'Server name must be a String or nil'].
+	self httpProxyServer: proxyServerName.
+
+	self httpProxyPort: portNum.
+	(self httpProxyPort isKindOf: String) ifTrue: [HTTPPort := portNum asNumber].
+	self httpProxyPort ifNil: [self httpProxyPort: self defaultPort].! !
+
+!HTTPSocketSqueak class methodsFor: 'proxy settings' stamp: 'al 1/8/2004 12:54'!
+useProxyServerNamed: proxyServerName port: portNum proxyUser: aString password: anotherString
+	self useProxyServerNamed: proxyServerName port: portNum.
+	self proxyUser: aString password: anotherString! !
+
+!HTTPSocketSqueak class methodsFor: 'utilities' stamp: 'hg 2/11/2002 11:31'!
+userAgentString 
+	"self userAgentString"
 
 	^'User-Agent: ',
 		SystemVersion current version, '-', 
@@ -1967,3 +2660,4 @@ code
 isCommandUnrecognized
 	^ self code = 500! !
 HTTPSocket initialize!
+HTTPSocketSqueak initialize!

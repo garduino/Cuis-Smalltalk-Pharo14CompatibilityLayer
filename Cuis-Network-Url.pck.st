@@ -1,4 +1,4 @@
-'From Cuis 4.1 of 12 December 2012 [latest update: #1528] on 2 January 2013 at 8:24:03 am'!
+'From Cuis 4.1 of 12 December 2012 [latest update: #1549] on 6 January 2013 at 7:32:06 pm'!
 'Description Please enter a description for this package '!
 !classDefinition: #Authorizer category: #'Cuis-Network-Url'!
 Object subclass: #Authorizer
@@ -948,7 +948,7 @@ username
 schemeName: schemeName  authority: authority  path: path  query: query
 	^self new schemeName: schemeName  authority: authority  path: path  query: query! !
 
-!HttpUrl methodsFor: 'downloading' stamp: 'StephaneDucasse 9/7/2011 21:53'!
+!HttpUrl methodsFor: 'downloading' stamp: 'gsa 1/6/2013 19:18'!
 askNamePassword
 	"Authorization is required by the host site.  Ask the user for a userName and password.  Encode them and store under this realm.  Return false if the user wants to give up."
 
@@ -956,8 +956,10 @@ askNamePassword
 	(self confirm: 'Host ', self asText, '
 wants a different user and password.  Type them now?' orCancel: [false])
 		ifFalse: [^ false].
-	user := UIManager default request: 'User account name?' initialAnswer: ''.
-	pass := UIManager default requestPassword: 'Password?'.
+	"user := UIManager default request: 'User account name?' initialAnswer: ''."
+	user := FillInTheBlankMorph request: 'User account name?' initialAnswer: ''.
+	"pass := UIManager default requestPassword: 'Password?'."
+	pass := FillInTheBlankMorph request: 'Password?'.
 	Passwords at: realm put: (Authorizer new encode: user password: pass).
 	^ true! !
 
