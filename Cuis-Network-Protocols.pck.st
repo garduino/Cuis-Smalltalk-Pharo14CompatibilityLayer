@@ -1,4 +1,4 @@
-'From Cuis 4.1 of 12 December 2012 [latest update: #1549] on 6 January 2013 at 7:32:02 pm'!
+'From Cuis 4.1 of 12 December 2012 [latest update: #1549] on 7 January 2013 at 7:04:33 pm'!
 'Description Please enter a description for this package '!
 !classDefinition: #FTPConnectionException category: #'Cuis-Network-Protocols'!
 Error subclass: #FTPConnectionException
@@ -2454,8 +2454,14 @@ localHostName: aString
  
  	^self connectionInfo at: #localHostName put: aString! !
 
-!SMTPClient methodsFor: 'private protocol' stamp: 'MarcusDenker 2/14/2010 20:16'!
+!SMTPClient methodsFor: 'private protocol' stamp: 'gsa 1/7/2013 19:00'!
 login
+	"If you need to authenticate on your SMTP server, use the next two instructions"
+"
+	self user: 'my@user.com'.
+	self password: 'xxxxxx'.
+"
+
 	self initiateSession. "send EHLO first"
 	self user ifNil: [^self].
 	self sendCommand: 'AUTH LOGIN ' , (self encodeString: self user).
@@ -2515,7 +2521,7 @@ useHelo: aBoolean
 
 	^self connectionInfo at: #useHelo put: aBoolean! !
 
-!SMTPClient class methodsFor: 'accessing' stamp: 'mir 2/21/2002 17:22'!
+!SMTPClient class methodsFor: 'accessing' stamp: 'gsa 1/7/2013 18:22'!
 defaultPortNumber
 	^25! !
 
@@ -2541,27 +2547,29 @@ deliverMailFrom: fromAddress to: recipientList text: messageText usingServer: aS
 		ensure: [smtpClient close]
 ! !
 
-!SMTPClient class methodsFor: 'example' stamp: 'gsa 1/6/2013 12:23'!
+!SMTPClient class methodsFor: 'example' stamp: 'gsa 1/7/2013 19:02'!
 example
 	"SMTPClient example"
+	"If you need to authenticate on SMTP server, modify the #login method at instance side"
 
-	self deliverMailFrom: 'cuis@cuis.org' to: #('garduino@yahoo.com') text:
+	self deliverMailFrom: 'my@user.com' to: #('info@arsol.net') text:
 'From: test
 To: "not listed"
 Subject: this is a test
 
 Hello from Cuis!!
-'	usingServer: 'smtp.comcast.net'! !
+'	usingServer: 'smtp.myserver.com'! !
 
-!SMTPClient class methodsFor: 'example' stamp: 'gsa 1/6/2013 12:23'!
+!SMTPClient class methodsFor: 'example' stamp: 'gsa 1/7/2013 19:04'!
 example2
 	"SMTPClient example2"
-
-	self deliverMailFrom: 'cuis@cuis.org' to: #('garduino@yahoo.com') text:
+	"If you need to authenticate on SMTP server, modify the #login method at instance side"
+	
+	self deliverMailFrom: 'my@user.com' to: #('info@arsol.net') text:
 'Subject: this is a test from Cuis SMTPClient
 
 Hello from Cuis!!
-'	usingServer: 'smtp.comcast.net'! !
+'	usingServer: 'smtp.myserver.com'! !
 
 !SMTPClient class methodsFor: 'accessing' stamp: 'mir 2/25/2002 19:07'!
 logFlag
