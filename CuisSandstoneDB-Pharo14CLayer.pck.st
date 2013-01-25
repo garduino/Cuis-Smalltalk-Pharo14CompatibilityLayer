@@ -1,4 +1,4 @@
-'From Cuis 4.0 of 21 April 2012 [latest update: #1308] on 27 November 2012 at 9:13:07 pm'!
+'From Cuis 4.1 of 12 December 2012 [latest update: #1578] on 25 January 2013 at 8:31:37 am'!
 'Description Please enter a description for this package '!
 !classDefinition: #MatrixPharo14CLayer category: #'CuisSandstoneDB-Pharo14CLayer'!
 Collection subclass: #MatrixPharo14CLayer

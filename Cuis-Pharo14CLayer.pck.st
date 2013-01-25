@@ -1,4 +1,4 @@
-'From Cuis 4.0 of 21 April 2012 [latest update: #1308] on 28 November 2012 at 6:40:26 pm'!
+'From Cuis 4.1 of 12 December 2012 [latest update: #1578] on 25 January 2013 at 8:36:44 am'!
 'Description Please enter a description for this package '!
 
 !Character methodsFor: '*Cuis-Pharo14CLayer' stamp: 'gsa 5/13/2012 10:42'!
@@ -7,7 +7,7 @@ charCode
 	^ (value bitAnd: 16r3FFFFF).
 ! !
 
-!Character class methodsFor: '*Cuis-Pharo14CLayer' stamp: 'gsa 5/13/2012 10:44'!
+!Character class methodsFor: '*Cuis-Pharo14CLayer' stamp: 'gsa 1/25/2013 08:35'!
 codePoint: anInteger 
 	"Just for ANSI Compliance"	
 	^self value: anInteger
